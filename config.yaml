@@ -1,0 +1,31 @@
+name: "Wooden Furnace Addon"
+version: "1.0.3"
+slug: "wooden_furnace"
+description: "Temperature monitoring for your wooden furnace."
+panel_icon: "mdi:gas-burner"
+
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+
+startup: application
+boot: auto
+
+ingress: true
+ingress_port: 8080
+ports:
+  8080/tcp: 8080
+
+hassio_api: true
+homeassistant_api: true
+hassio_role: default
+
+options:
+  sensor_groups: ""
+  database_url: "/data/db.sqlite"
+
+schema:
+  sensor_groups: str
+  database_url: str

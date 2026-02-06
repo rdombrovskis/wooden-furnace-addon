@@ -1,0 +1,98 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model SensorGroup {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String
+  version   String
+
+  sensors   Sensor[] @relation(name: "SensorToSensorGroup")
+  part      Part[]   @relation(name: "PartToSensorGroup")
+
+  @@unique([name, version])
+}
+
+model Sensor {
+  id        Int         @id @default(autoincrement())
+  createdAt DateTime    @default(now())
+  entityId  String      @unique
+  logs      Log[]
+
+  group     SensorGroup @relation(name: "SensorToSensorGroup", fields: [groupId], references: [id])
+  groupId   Int
+
+  @@unique([entityId, groupId])
+}
+
+model PartName {
+    id              Int         @id @default(autoincrement())
+    createdAt       DateTime    @default(now())
+    name            String      @unique
+    part            Part[]
+}
+
+model Part {
+    id              Int         @id @default(autoincrement())
+    createdAt       DateTime    @default(now())
+
+    sensorGroup     SensorGroup @relation(name: "PartToSensorGroup", fields: [sensorGroupId], references: [id])
+    sensorGroupId   Int
+    session         Session     @relation(name: "PartToSession", fields: [sessionId], references: [id])
+    sessionId       Int
+    partNames       PartName    @relation(fields: [partNamesId], references: [id])
+    partNamesId     Int
+    logs            Log[]
+}
+
+model Session {
+    id          Int             @id @default(autoincrement())
+    createdAt   DateTime        @default(now())
+    tag         String          @unique
+    startTime   DateTime? 
+    endTime     DateTime?
+
+    parts       Part[]          @relation(name: "PartToSession")
+    logs        Log[]           @relation(name: "LogsToSession")
+    state       SessionState    @relation(fields: [stateId], references: [id])
+    stateId     Int
+}
+
+model SessionState {
+    id          Int             @id @default(autoincrement())
+    createdAt   DateTime        @default(now())
+    name        String          @unique
+
+    sessions    Session[]
+}
+
+model Log {
+    id              Int         @id @default(autoincrement())
+    createdAt       DateTime    @default(now())
+    sensorEntityId  String
+    value           String
+    groupName       String
+    timestamp       DateTime    @default(now())
+
+    session         Session     @relation(name: "LogsToSession", fields: [sessionId], references: [id])
+    sessionId       Int
+
+    part            Part        @relation(fields: [partId], references: [id])
+    partId          Int
+
+    sensor          Sensor      @relation(fields: [sensorId], references: [id])
+    sensorId        Int
+
+    @@index([sessionId, timestamp])
+    @@index([partId, timestamp])
+    @@index([sensorEntityId, timestamp])
+    @@index([sessionId, partId, timestamp])
+}
+
