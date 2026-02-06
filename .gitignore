@@ -21,16 +21,14 @@ pnpm-debug.log*
 ################################
 # Env / secrets
 ################################
-.env
-.env.*
-backend/.env
-frontend/.env
 
 ################################
 # Build artifacts
 ################################
-frontend/dist/
-backend/dist/
+wooden_furnace/frontend/dist/
+/frontend/dist/
+wooden_furnace/backend/dist/
+/backend/dist/
 *.tsbuildinfo
 
 ################################
