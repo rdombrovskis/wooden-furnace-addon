@@ -2,6 +2,12 @@ const API_BASE = import.meta.env.DEV
     ? 'http://localhost:8080/'
     : ''
 
+export async function fetchConfig() {
+    const res = await fetch(`${API_BASE}api/config`);
+    if (!res.ok) throw new Error("Failed to load config");
+    return res.json();
+}
+
 export async function getPartNames() {
     const res = await fetch(`${API_BASE}api/part-names`);
     if (!res.ok) throw new Error("Failed to load part names");

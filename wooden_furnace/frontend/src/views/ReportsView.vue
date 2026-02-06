@@ -184,6 +184,7 @@ const FIXED_COLORS = [
 
 const route = useRoute();
 const session = ref(null);
+const config = ref(null);
 const logs = ref([]);
 const loading = ref(false);
 const error = ref(null);
@@ -252,6 +253,7 @@ const selectedPart = computed(() =>
 
 onMounted(async () => {
   await loadData();
+  config.value = await fetchConfig();
 });
 
 async function loadData() {
@@ -287,7 +289,7 @@ function prepareChart() {
 
   // Filter logs by selected part
   const _partLogs = logs.value.filter(l => l.part?.id === selectedPartId.value);
-  const partLogs = smoothBySensor(_partLogs, 50, 5);
+  const partLogs = smoothBySensor(_partLogs, config.value.filterTargetPps ?? 100, config.value.filterWindowSize ?? 5);
 
   // Group by sensors
   const sensorsMap = new Map();
@@ -386,7 +388,7 @@ function generateReport() {
   if (filteredLogs.length === 0) return;
 
   // Smooth (function works with full logs)
-  const smoothedLogs = smoothBySensor(filteredLogs, 500, 5);
+  const smoothedLogs = smoothBySensor(filteredLogs, config.value.filterTargetPps ?? 100, config.value.filterWindowSize ?? 5);
 
   // Now convert to simple format for calculations
   const partLogs = smoothedLogs.map(l => ({
@@ -468,7 +470,7 @@ if (t3Logs.length) {
   updateChartAnnotations(eventsList.filter(e => e.reached));
 }
 
-function smoothBySensor(logs, targetPointsPerSensor = 500, windowSize = 5) {
+function smoothBySensor(logs, targetPointsPerSensor, windowSize) {
   // 1. Group by sensorId
   const bySensor = new Map();
   logs.forEach(log => {

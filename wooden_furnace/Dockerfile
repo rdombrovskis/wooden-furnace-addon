@@ -24,6 +24,8 @@ RUN npm ci --only=production
 
 COPY backend/ .
 
+# Fake env var for prisma to generate client - it will be overridden at runtime
+ENV DATABASE_URL="file:./data/db.sqlite"
 COPY backend/prisma ./prisma
 RUN npx prisma generate
 

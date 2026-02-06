@@ -52,6 +52,13 @@ app.use('/api/sensor-groups', sensorGroupsRouter);
 app.use('/api/sessions', sessionsRouter); 
 app.use('/api/logs', logsRouter);
 
+app.get("/api/config", (req, res) => {
+  res.json({
+    filterTargetPps: Number(process.env.FILTER_TARGET_PPS ?? 500),
+    filterWindowSize: Number(process.env.FILTER_WINDOW_SIZE ?? 5),
+  });
+});
+
 // SPA fallback
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'))

@@ -25,7 +25,11 @@ hassio_role: default
 options:
   sensor_groups: ""
   database_url: "/data/db.sqlite"
+  filter_target_pps: 500
+  filter_window_size: 5
 
 schema:
   sensor_groups: str
   database_url: str
+  filter_target_pps: "int(10,1000)"
+  filter_window_size: "int(2,50)"
