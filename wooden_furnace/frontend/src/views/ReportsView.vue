@@ -137,7 +137,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { getSessionById, getLogs } from './../api/index.js';
+import { getSessionById, getLogs, fetchConfig } from './../api/index.js';
 import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
