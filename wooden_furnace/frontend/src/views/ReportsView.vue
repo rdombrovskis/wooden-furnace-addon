@@ -1,24 +1,29 @@
 <template>
   <div class="min-h-screen p-2 [@media(min-width:850px)]:p-6 bg-gray-50 text-gray-900">
-    <div class="max-w-7xl mx-auto space-y-8">
+    <div class="pdf-content max-w-7xl mx-auto space-y-8">
       <!-- Header with session metadata -->
-      <header class="border-b pb-2">
-        <h3 class="text-2xl font-bold tracking-tight">
-          Session report #{{ session?.id }}
-        </h3>
-        <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
-          <div>
-            <div class="text-gray-500">Created</div>
-            <div>{{ formatDate(session?.createdAt) || '—' }}</div>
+      <header class="border-b pb-2 flex items-center justify-between">
+        <div>
+          <h3 class="text-2xl font-bold tracking-tight">
+            Session report #{{ session?.id }}
+          </h3>
+          <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
+            <div>
+              <div class="text-gray-500">Created</div>
+              <div>{{ formatDate(session?.createdAt) || '—' }}</div>
+            </div>
+            <div>
+              <div class="text-gray-500">Start</div>
+              <div>{{ formatDate(session?.startTime) || '—' }}</div>
+            </div>
+            <div>
+              <div class="text-gray-500">End</div>
+              <div>{{ formatDate(session?.endTime) || '—' }}</div>
+            </div>
           </div>
-          <div>
-            <div class="text-gray-500">Start</div>
-            <div>{{ formatDate(session?.startTime) || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-gray-500">End</div>
-            <div>{{ formatDate(session?.endTime) || '—' }}</div>
-          </div>
+        </div>
+        <div class="ml-4">
+          <PdfExport v-if="selectedPart" :chart-ref="chartRef" />
         </div>
       </header>
 
@@ -64,12 +69,6 @@
             <h3 class="text-xl font-semibold">
               Part: {{ selectedPart.name }}
             </h3>
-            <button
-              @click="selectedPartId = null; selectedPart = null;"
-              class="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Collapse
-            </button>
           </div>
 
           <!-- Temperature fields T1–T4 -->
@@ -85,13 +84,6 @@
               />
             </div>
           </div>
-          <button
-            @click="generateReport"
-            class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
-          >
-            Generate report
-          </button>
-
           <!-- Chart -->
           <div v-if="chartData" class="mt-10">
             <h4 class="text-lg font-semibold mb-4">Temperature chart</h4>
@@ -115,15 +107,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                          <tr v-for="event in events" :key="event.label" class="border-b last:border-0">
-                            <td class="py-3">{{ event.label }}</td>
-                            <td class="py-3">{{ event.reached === false ? '—' : formatDate(event.time) }}</td>
-                            <td class="py-3">
-                              <span v-if="event.reached === false" class="text-red-600">Not reached</span>
-                              <span v-else-if="event.duration != null">{{ `${event.duration} min` }}</span>
-                              <span v-else>—</span>
-                            </td>
-                          </tr>
+                  <tr v-for="event in events" :key="event.label" class="border-b last:border-0">
+                    <td class="py-3">{{ event.label.full }}</td>
+                    <td class="py-3">{{ event.reached === false ? '—' : formatDate(event.time) }}</td>
+                    <td class="py-3">
+                      <span v-if="event.reached === false" class="text-red-600">Not reached</span>
+                      <span v-else-if="event.duration != null">{{ `${event.duration} min` }}</span>
+                      <span v-else>—</span>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -135,7 +127,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import PdfExport from './../components/PdfExport.vue';
+import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { getSessionById, getLogs, fetchConfig } from './../api/index.js';
 import { Line } from 'vue-chartjs';
@@ -194,6 +187,7 @@ const chartData = ref(null);
 const events = ref([]);
 const chartOptions = {
   responsive: true,
+  animation: false,
   maintainAspectRatio: false,
   scales: {
     x: {
@@ -213,9 +207,28 @@ const chartOptions = {
   plugins: {
     annotation: {
       annotations: {}
+    },
+    legend: {
+      onClick: (e, legendItem, legend) => {
+        const index = legendItem.datasetIndex;
+        const ci = legend.chart;
+        if (ci.isDatasetVisible(index)) {
+            ci.hide(index);
+            legendItem.hidden = true;
+        } else {
+            ci.show(index);
+            legendItem.hidden = false;
+        }
+        onLegendToggle();
+      }
     }
   }
 };
+
+function onLegendToggle(chart) {
+  generateReport();
+}
+
 
 const temperatureLabels = [
   'T1 (gelation)',
@@ -276,13 +289,21 @@ async function loadData() {
   }
 }
 
-function selectPart(partId) {
+async function selectPart(partId) {
   selectedPartId.value = partId;
   // reset previous chart/events and prepare new chart
   chartData.value = null;
   events.value = [];
   prepareChart();
 }
+
+watch(chartData, async () => {
+  await nextTick(); // wait for chart to render with new data
+  await nextTick(); // ensure chartRef is updated
+  if (chartRef.value?.chart) {
+    generateReport();
+  }
+});
 
 function prepareChart() {
   if (!selectedPart.value) return;
@@ -325,7 +346,7 @@ function updateChartAnnotations(events) {
   const annotations = {};
   
   events.forEach((event, idx) => {
-    const color = getEventColor(event.label);
+    const color = getEventColor(event.label.short);
     annotations[`event${idx}`] = {
       type: 'line',
       xMin: event.time,
@@ -334,7 +355,7 @@ function updateChartAnnotations(events) {
       borderWidth: 2,
       label: {
         display: true,
-        content: event.label,
+        content: event.label.short,
         position: 'start',
         backgroundColor: color,
         color: 'white',
@@ -347,13 +368,23 @@ function updateChartAnnotations(events) {
   chartRef.value.chart.update();
 }
 
+const eventLabels = {
+  start: { short: 'Start', full: 'Process Start' },
+  reachedT1: { short: 'T1', full: 'Reached T1' },
+  reachedT2: { short: 'T2', full: 'Reached T2' },
+  reachedT3: { short: 'T3', full: 'Reached T3' },
+  holdT3: { short: 'T3 Hold', full: 'T3 Hold Complete' },
+  cooledT4: { short: 'T4', full: 'Cooled to T4' },
+};
+
 function getEventColor(label) {
   const colors = {
-    'Reached T1': '#4CAF50',
-    'Reached T2': '#FF9800',
-    'Reached T3': '#F44336',
-    'T3 Hold': '#9C27B0',
-    'Cooled to T4': '#2196F3',
+    [eventLabels.start.short]: '#000000',
+    [eventLabels.reachedT1.short]: '#4CAF50',
+    [eventLabels.reachedT2.short]: '#FF9800',
+    [eventLabels.reachedT3.short]: '#F44336',
+    [eventLabels.holdT3.short]:   '#9C27B0',
+    [eventLabels.cooledT4.short]: '#2196F3',
   };
   return colors[label] || '#000';
 }
@@ -397,7 +428,7 @@ function generateReport() {
   }));
 
   if (partLogs.length === 0) {
-    events.value = [{ label: 'Start', time: null, duration: null, reached: false }];
+    events.value = [{ label: eventLabels.start, time: null, duration: null, reached: false }];
     updateChartAnnotations([]);
     return;
   }
@@ -406,12 +437,12 @@ function generateReport() {
   const eventsList = [];
 
   // Start
-  eventsList.push({ label: 'Start', time: partLogs[0].time, reached: true  });
+  eventsList.push({ label: eventLabels.start, time: partLogs[0].time, duration: null, reached: true });
 
   // Reached T1
   const t1Event = partLogs.find(l => l.value >= T1);
   if (!t1Event) {
-    eventsList.push({ label: 'Reached T1', time: null, duration: null, reached: false });
+    eventsList.push({ label: eventLabels.reachedT1, time: null, duration: null, reached: false });
     events.value = eventsList;
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
@@ -419,18 +450,18 @@ function generateReport() {
   const startT1 = partLogs[0].time;
   const endT1 = t1Event.time;
   const T1duration = Math.round((endT1 - startT1) / 60000); // minutes
-  if (t1Event) eventsList.push({ label: 'Reached T1', time: t1Event.time, duration: T1duration, reached: true });
+  if (t1Event) eventsList.push({ label: eventLabels.reachedT1, time: t1Event.time, duration: T1duration, reached: true });
 
   // Reached T2
   const t2Event = partLogs.find(l => l.value >= T2);
   if (!t2Event) {
-    eventsList.push({ label: 'Reached T2', time: null, duration: null, reached: false });
+    eventsList.push({ label: eventLabels.reachedT2, time: null, duration: null, reached: false });
     events.value = eventsList;
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
   }
   const T2duration = Math.round((t2Event.time - endT1) / 60000); // minutes
-  if (t2Event) eventsList.push({ label: 'Reached T2', time: t2Event.time, duration: T2duration, reached: true });
+  if (t2Event) eventsList.push({ label: eventLabels.reachedT2, time: t2Event.time, duration: T2duration, reached: true });
 
   // Reached T3 and hold
 const t3Logs = partLogs.filter(l => l.value >= (T3 - 1));
@@ -439,7 +470,7 @@ if (t3Logs.length) {
 
   const t3Event = t3Logs.find(l => l.value >= T3);
   if (!t3Event) {
-    eventsList.push({ label: 'Reached T3', time: null, duration: null, reached: false });
+    eventsList.push({ label: eventLabels.reachedT3, time: null, duration: null, reached: false });
     events.value = eventsList;
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
@@ -450,20 +481,20 @@ if (t3Logs.length) {
   const durationToT3 = Math.round((t3Event.time - t2Event.time) / 60000); // minutes from T2 to T3
   const holdDuration = Math.round((endT3 - startT3) / 60000); // hold duration within >= T3-1
 
-  eventsList.push({ label: 'Reached T3', time: startT3, duration: durationToT3, reached: true });
-  eventsList.push({ label: 'T3 Hold', time: endT3, duration: holdDuration, reached: true });
+  eventsList.push({ label: eventLabels.reachedT3, time: startT3, duration: durationToT3, reached: true });
+  eventsList.push({ label: eventLabels.holdT3, time: endT3, duration: holdDuration, reached: true });
 }
   // Cooling to T4
   const afterT3 = partLogs.filter(l => l.time > (endT3 || new Date()));
   const t4Event = afterT3.find(l => l.value <= T4);
   if (!t4Event) {
-    eventsList.push({ label: 'Cooled to T4', time: null, duration: null, reached: false });
+    eventsList.push({ label: eventLabels.cooledT4, time: null, duration: null, reached: false });
     events.value = eventsList;
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
   }
   const durationToT4 = t4Event ? Math.round((t4Event.time - (endT3 || new Date())) / 60000) : null;
-  if (t4Event) eventsList.push({ label: 'Cooled to T4', time: t4Event.time, duration: durationToT4, reached: true });
+  if (t4Event) eventsList.push({ label: eventLabels.cooledT4, time: t4Event.time, duration: durationToT4, reached: true });
   
   events.value = eventsList;
 
