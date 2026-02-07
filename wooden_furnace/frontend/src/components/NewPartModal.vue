@@ -16,7 +16,14 @@
               id="part-name"
               v-model="partName"
               type="text"
-              placeholder="Enter part name"
+              placeholder="Enter part name (required)"
+              class="w-full mb-3 px-3 py-2 border text-gray-700 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
+            />
+            <input
+              id="part-name"
+              v-model="oemCode"
+              type="text"
+              placeholder="Enter OEM part number"
               class="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
             />
             <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
@@ -60,6 +67,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'confirm'])
 
 const partName = ref('')
+const oemCode = ref('')
 const error = ref('')
 const loading = ref(false)
 
@@ -67,6 +75,7 @@ const loading = ref(false)
 watch(() => props.show, (newVal) => {
   if (newVal) {
     partName.value = ''
+    oemCode.value = ''
     error.value = ''
     loading.value = false
   }
@@ -87,7 +96,7 @@ const handleSubmit = async () => {
   
   try {
     // Emit the new part name to parent
-    emit('confirm', partName.value.trim())
+    emit('confirm', { name: partName.value.trim(), oem: oemCode.value.trim() })
   } catch (err) {
     error.value = err.message || 'Failed to add part'
   } finally {

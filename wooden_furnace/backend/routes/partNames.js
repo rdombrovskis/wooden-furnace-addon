@@ -20,7 +20,7 @@ router.get('/:id', async (req, res) => {
     try {
         const partName = await prisma.partName.findUnique({
             where: { id: parseInt(req.params.id) },
-            include: { part: true }, // опционально: показать все экземпляры деталей с этим именем
+            include: { part: true }, // include all part instances with this name
         });
         if (!partName) {
             return res.status(404).json({ error: 'PartName not found' });
@@ -34,16 +34,16 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { name } = req.body;
+        const { name, oem } = req.body;
         if (!name || name.trim() === '') {
             return res.status(400).json({ error: 'Name is required' });
         }
         const partName = await prisma.partName.create({
-            data: { name: name.trim() },
+            data: { name: name.trim(), oem: oem?.trim() || null },
         });
         res.status(201).json(partName);
     } catch (err) {
-        // Если имя уже существует (уникальное поле), Prisma выбросит ошибку
+        // If the name already exists (unique constraint), Prisma will throw an error
         if (err.code === 'P2002') {
             return res.status(409).json({ error: 'PartName already exists' });
         }
@@ -77,7 +77,7 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        // Проверяем, есть ли связанные Part
+        // Check if there are related Parts
         const partName = await prisma.partName.findUnique({
             where: { id: parseInt(req.params.id) },
             include: { part: true },

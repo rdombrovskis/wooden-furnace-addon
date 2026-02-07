@@ -36,6 +36,7 @@ model PartName {
     id              Int         @id @default(autoincrement())
     createdAt       DateTime    @default(now())
     name            String      @unique
+    oem             String?
     part            Part[]
 }
 

@@ -26,14 +26,14 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-4 py-2 text-left">Name</th>
-                <th class="px-4 py-2 text-left">Code</th>
+                <th class="px-4 py-2 text-left">OEM</th>
                 <th class="px-4 py-2 text-left">Group</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-for="part in parts" :key="part.id" class="bg-white hover:bg-gray-50">
                 <td class="px-4 py-2">{{ part.name }}</td>
-                <td class="px-4 py-2">{{ part.code }}</td>
+                <td class="px-4 py-2">{{ part.oem }}</td>
                 <td class="px-4 py-2">
                   <select
                     :id="`part-id-${part.id}`"
@@ -41,7 +41,7 @@
                     class="bg-white border border-gray-300 text-gray-900 rounded px-2 py-1"
                   >
                     <option value="">-- select group --</option>
-                    <option v-for="group in thermometerGroups" :key="group.id" :value="group.id">
+                    <option v-for="group in visibleThermometerGroups" :key="group.id" :value="group.id">
                       {{ group.id + ': ' + group.name }}
                     </option>
                   </select>
@@ -72,7 +72,7 @@
               <p class="text-sm text-gray-500">Thermometer groups are defined in configuration</p>
             </header>
             <ul class="space-y-2 mt-4">
-              <li v-for="group in thermometerGroups" :key="group.id">
+              <li v-for="group in visibleThermometerGroups" :key="group.id">
                 <div class="font-semibold text-gray-900">{{ group.id + ': ' + group.name }}</div>
                 <ul class="ml-4 space-y-1">
                   <li
@@ -103,21 +103,25 @@ const router = useRouter();
 const loading = ref(false);
 const showModal = ref(false);
 
+const visibleThermometerGroups = computed(() =>
+  thermometerGroups.value.filter(g => g.sensors && g.sensors.length > 0)
+);
+
 // Placeholder for parts
 const parts = reactive([]);
 
 // Placeholder for thermometer groups
 const thermometerGroups = ref([]);
 
-const handleNewPart = async (partName) => {
+const handleNewPart = async (part) => {
   try {
     // API call to create new part
-    const newPart = await createPart({ name: partName });
+    const newPart = await createPart(part);
     
     parts.push({
       id: newPart.id,
       name: newPart.name,
-      code: newPart.id,
+      oem: newPart.oem,
       selectedGroup: ""
     });
     showModal.value = false;
@@ -134,7 +138,7 @@ onMounted(async () => {
     parts.push({
       id: p.id,
       name: p.name,
-      code: p.id, // no code yet — use id
+      oem: p.oem, 
       selectedGroup: "",
     });
   });
