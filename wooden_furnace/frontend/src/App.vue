@@ -32,7 +32,7 @@
     </nav>
 
     <!-- Content -->
-    <main class="bg-gray-950 text-gray-200 min-h-screen p-6">
+    <main class="bg-gray-950 text-gray-200 min-h-screen p-0 [@media(min-width:850px)]:p-6">
       <RouterView />
     </main>
   </DefaultLayout>

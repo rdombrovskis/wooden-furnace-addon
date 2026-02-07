@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-6 bg-gray-50 text-gray-900">
+  <div class="min-h-screen p-2 [@media(min-width:850px)]:p-6 bg-gray-50 text-gray-900">
     <div class="max-w-7xl mx-auto space-y-8">
       <!-- Header with session metadata -->
       <header class="border-b pb-2">
