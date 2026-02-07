@@ -1,5 +1,5 @@
 name: "Wooden Furnace Addon"
-version: "1.0.6"
+version: "1.1.0"
 slug: "wooden_furnace"
 description: "Temperature monitoring for your wooden furnace."
 panel_icon: "mdi:gas-burner"
