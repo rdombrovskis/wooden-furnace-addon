@@ -18,75 +18,75 @@
           </button>
         </div>
       </header>
-      <div class="grid grid-cols-2 gap-6">
-      
-    <!-- Parts table -->
-    <div>    
-      <table class="min-w-full divide-y divide-gray-200 bg-white text-gray-900 rounded-md shadow">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-2 text-left">Name</th>
-            <th class="px-4 py-2 text-left">Code</th>
-            <th class="px-4 py-2 text-left">Group</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr v-for="part in parts" :key="part.id" class="bg-white hover:bg-gray-50">
-            <td class="px-4 py-2">{{ part.name }}</td>
-            <td class="px-4 py-2">{{ part.code }}</td>
-            <td class="px-4 py-2">
-              <select
-                :id="`part-id-${part.id}`"
-                v-model="part.selectedGroup"
-                class="bg-white border border-gray-300 text-gray-900 rounded px-2 py-1"
-              >
-                <option value="">-- select group --</option>
-                <option v-for="group in thermometerGroups" :key="group.id" :value="group.id">
-                  {{ group.id + ': ' + group.name }}
-                </option>
-              </select>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="grid grid-cols-1 [@media(min-width:850px)]:grid-cols-2 gap-6">
+          
+        <!-- Parts table -->
+        <div>    
+          <table class="min-w-full divide-y divide-gray-200 bg-white text-gray-900 rounded-md shadow">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left">Name</th>
+                <th class="px-4 py-2 text-left">Code</th>
+                <th class="px-4 py-2 text-left">Group</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="part in parts" :key="part.id" class="bg-white hover:bg-gray-50">
+                <td class="px-4 py-2">{{ part.name }}</td>
+                <td class="px-4 py-2">{{ part.code }}</td>
+                <td class="px-4 py-2">
+                  <select
+                    :id="`part-id-${part.id}`"
+                    v-model="part.selectedGroup"
+                    class="bg-white border border-gray-300 text-gray-900 rounded px-2 py-1"
+                  >
+                    <option value="">-- select group --</option>
+                    <option v-for="group in thermometerGroups" :key="group.id" :value="group.id">
+                      {{ group.id + ': ' + group.name }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-      <!-- 'New Session' button -->
-      <div class="mt-4">
-        <button
-          class="px-4 py-2 rounded-md font-semibold transition-colors
-                 bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-600"
-          :disabled="!hasSelectedParts || loading"
-          @click="startSession"
-        >
-          <span v-if="!loading">New Session</span>
-          <span v-else>Creating...</span>
-        </button>
-      </div>
-    </div>
+          <!-- 'New Session' button -->
+          <div class="mt-4">
+            <button
+              class="px-4 py-2 rounded-md font-semibold transition-colors
+                    bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-600"
+              :disabled="!hasSelectedParts || loading"
+              @click="startSession"
+            >
+              <span v-if="!loading">New Session</span>
+              <span v-else>Creating...</span>
+            </button>
+          </div>
+        </div>
 
-    <!-- Thermometer groups tree -->
-    <div class="flex justify-end">
-      <div class="w-full max-w-xs">
-        <header class="border-b pb-4">
-          <h2 class="text-2xl font-bold tracking-tight">Thermometers</h2>
-          <p class="text-sm text-gray-500">Thermometer groups are defined in configuration</p>
-        </header>
-        <ul class="space-y-2 mt-4">
-          <li v-for="group in thermometerGroups" :key="group.id">
-            <div class="font-semibold text-gray-900">{{ group.id + ': ' + group.name }}</div>
-            <ul class="ml-4 space-y-1">
-              <li
-                v-for="sensor in group.sensors"
-                :key="sensor.id"
-                class="text-gray-700"
-              >
-                {{ sensor.entityId }}
+        <!-- Thermometer groups tree -->
+        <div class="flex justify-end">
+          <div class="w-full max-w-xs">
+            <header class="border-b pb-4">
+              <h2 class="text-2xl font-bold tracking-tight">Thermometers</h2>
+              <p class="text-sm text-gray-500">Thermometer groups are defined in configuration</p>
+            </header>
+            <ul class="space-y-2 mt-4">
+              <li v-for="group in thermometerGroups" :key="group.id">
+                <div class="font-semibold text-gray-900">{{ group.id + ': ' + group.name }}</div>
+                <ul class="ml-4 space-y-1">
+                  <li
+                    v-for="sensor in group.sensors"
+                    :key="sensor.id"
+                    class="text-gray-700"
+                  >
+                    {{ sensor.entityId }}
+                  </li>
+                </ul>
               </li>
             </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

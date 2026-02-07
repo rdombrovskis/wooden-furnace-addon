@@ -16,7 +16,7 @@
       </div>
 
       <section v-else-if="sessions.length > 0">
-        <table class="w-full text-sm border-separate border-spacing-y-2">
+        <table class="w-full text-sm border-separate border-spacing-y-2 hidden [@media(min-width:1000px)]:table">
           <thead class="text-left text-gray-500">
             <tr>
               <th class="px-4 py-2">ID</th>
@@ -84,8 +84,79 @@
             </tr>
           </tbody>
         </table>
-      </section>
 
+      <!-- MOBILE VERSION -->
+      <div
+        v-for="session in sessions"
+        :key="session.id"
+        class="[@media(min-width:1000px)]:hidden bg-gray-50 rounded p-4 mb-4 shadow-sm"
+      >
+        <div class="grid grid-cols-2 gap-y-2 gap-x-4 items-start">
+          <div>
+            <div class="mb-1">
+              <span class="font-semibold">ID:</span>
+              <span class="font-mono text-blue-600"> #{{ session.id }}</span>
+            </div>
+            <div class="mb-1">
+              <span class="font-semibold">Parts:</span>
+              {{ formatParts(session.parts) }}
+            </div>
+            <div class="mb-1">
+              <span class="font-semibold">Created:</span>
+              {{ formatDate(session.createdAt) }}
+            </div>
+            <div class="mb-1">
+              <span class="font-semibold">Start:</span>
+              {{ formatDate(session.startTime) }}
+            </div>
+            <div class="mb-1">
+              <span class="font-semibold">End:</span>
+              {{ formatDate(session.endTime) }}
+            </div>
+            <div class="mb-1">
+              <span class="font-semibold">Status:</span>
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold uppercase ml-2"
+                :class="statusStyle(session.state.name)"
+              >
+                {{ session.state.name }}
+              </span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 justify-start items-end">
+            <button
+              @click="startSession(session)"
+              :disabled="!canStart(session)"
+              class="px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed w-24 text-center"
+            >
+              Start
+            </button>
+            <button
+              @click="stopSession(session)"
+              :disabled="!canStop(session)"
+              class="px-3 py-2 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed w-24 text-center"
+            >
+              Stop
+            </button>
+            <button
+              @click="completeSession(session)"
+              :disabled="!canComplete(session)"
+              class="px-3 py-2 bg-gray-700 text-white text-xs rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed w-24 text-center"
+            >
+              Complete
+            </button>
+            <button
+              @click="goToReport(session.id)"
+              :disabled="!canReport(session)"
+              class="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed w-24 text-center"
+            >
+              Report
+            </button>
+          </div>
+        </div>
+      </div>
+      </section>
       <div v-else class="text-center py-12 text-gray-500">
         No sessions created.
       </div>
