@@ -9,7 +9,7 @@
         <div class="ml-4">
           <button
             class="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-            @click="showModal = true"
+            @click="showPartModal = true"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -56,7 +56,7 @@
               class="px-4 py-2 rounded-md font-semibold transition-colors
                     bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-600"
               :disabled="!hasSelectedParts || loading"
-              @click="startSession"
+              @click="showBatchModal = true"
             >
               <span v-if="!loading">New Session</span>
               <span v-else>Creating...</span>
@@ -90,18 +90,35 @@
       </div>
     </div>
   </div>
-  <NewPartModal :show="showModal" @close="showModal = false" @confirm="handleNewPart" />
+  <ModalInput :show="showPartModal" 
+              title="New Part"
+              :fields="[
+                { key: 'name', label: 'Part Name', placeholder: 'Enter name', required: true },
+                { key: 'oem', label: 'OEM Code', placeholder: 'Enter OEM', required: false }
+              ]"
+              confirmText="Add Part"
+              @close="showPartModal = false" 
+              @confirm="handleNewPart" />
+  <ModalInput :show="showBatchModal" 
+              title="Batch number"
+              :fields="[
+                { key: 'batch', label: 'Batch number', placeholder: 'Enter batch number', required: false }
+              ]"
+              confirmText="Confirm"
+              @close="showBatchModal = false" 
+              @confirm="startSession" />`
 </template>
 
 <script setup>
 import { reactive, computed, onMounted, ref } from 'vue';
 import { getPartNames, getSensorGroups, createSession, createPart } from "./../api/index.js";
 import { useRouter } from 'vue-router';
-import NewPartModal from './../components/NewPartModal.vue'
+import ModalInput from '../components/ModalInput.vue'
 
 const router = useRouter();
 const loading = ref(false);
-const showModal = ref(false);
+const showPartModal = ref(false);
+const showBatchModal = ref(false);
 
 const visibleThermometerGroups = computed(() =>
   thermometerGroups.value.filter(g => g.sensors && g.sensors.length > 0)
@@ -124,7 +141,7 @@ const handleNewPart = async (part) => {
       oem: newPart.oem,
       selectedGroup: ""
     });
-    showModal.value = false;
+    showPartModal.value = false;
   } catch (err) {
     console.error('Failed to create part:', err);
     alert('Failed to create part: ' + err.message);
@@ -154,23 +171,23 @@ const hasSelectedParts = computed(() =>
 );
 
 // Start session (POST request)
-const startSession = async () => {
+const startSession = async (data) => {
   loading.value = true;
 
-  // Собираем выбранные детали
   const selected = parts
     .filter((p) => p.selectedGroup !== '')
     .map((p) => ({
-      partNameId: p.id,          // ID PartName
-      sensorGroupId: parseInt(p.selectedGroup), // ID SensorGroup
+      partNameId: p.id,
+      sensorGroupId: parseInt(p.selectedGroup),
     }));
 
-  console.log('Sending to server:', selected);
+  showBatchModal.value = false;  
 
   try {
       const sessionData = {
         tag: `session_${Date.now()}`,
         parts: selected,
+        batch: data.batch || null
       };
       const session = await createSession(sessionData);
       console.log('Session created:', session);

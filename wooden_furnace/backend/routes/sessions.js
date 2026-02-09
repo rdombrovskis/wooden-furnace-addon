@@ -16,7 +16,7 @@ function safeParseInt(v) {
 
 router.post('/', async (req, res) => {
     try {
-        const { tag = `session_${Date.now()}`, parts } = req.body;
+        const { tag = `session_${Date.now()}`, batch, parts } = req.body;
 
         if (!Array.isArray(parts) || parts.length === 0) {
             return res.status(400).json({ error: 'Parts array is required and cannot be empty' });
@@ -42,6 +42,7 @@ router.post('/', async (req, res) => {
                         sensorGroupId: p.sensorGroupId,
                     })),
                 },
+                batch: batch,
             },
             include: { parts: true, state: true },
         });

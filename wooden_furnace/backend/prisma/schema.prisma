@@ -64,6 +64,7 @@ model Session {
     logs        Log[]           @relation(name: "LogsToSession")
     state       SessionState    @relation(fields: [stateId], references: [id])
     stateId     Int
+    batch       String?
 }
 
 model SessionState {
