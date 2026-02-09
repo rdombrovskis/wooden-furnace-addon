@@ -1,50 +1,55 @@
 <template>
   <div class="min-h-screen p-2 [@media(min-width:850px)]:p-6 bg-gray-50 text-gray-900">
     <div class="pdf-content max-w-7xl mx-auto space-y-8">
-      <!-- Header with session metadata -->
-      <header class="border-b pb-2 flex items-center justify-between">
-        <div>
-          <h3 class="text-2xl font-bold tracking-tight">
-            Session report #{{ session?.id }}
-          </h3>
-          <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
-            <div>
-              <div class="text-gray-500">Created</div>
-              <div>{{ formatDate(session?.createdAt) || '—' }}</div>
-            </div>
-            <div>
-              <div class="text-gray-500">Start</div>
-              <div>{{ formatDate(session?.startTime) || '—' }}</div>
-            </div>
-            <div>
-              <div class="text-gray-500">End</div>
-              <div>{{ formatDate(session?.endTime) || '—' }}</div>
+      <div v-if="route.params.sessionId">
+        <!-- Header with session metadata -->
+        <header class="border-b pb-2 flex items-center justify-between">
+          <div>
+            <h3 class="text-2xl font-bold tracking-tight">
+              Session report #{{ session?.id }}
+            </h3>
+            <div class="grid grid-cols-4 gap-4 mt-4 text-sm">
+              <div>
+                <div class="text-gray-500">Created</div>
+                <div>{{ formatDate(session?.createdAt) || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">Start</div>
+                <div>{{ formatDate(session?.startTime) || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">End</div>
+                <div>{{ formatDate(session?.endTime) || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">Batch</div>
+                <div>{{ session?.batch || '—' }}</div>
+              </div>
             </div>
           </div>
+          <div class="ml-4">
+            <PdfExport v-if="selectedPart" :chart-ref="chartRef" />
+          </div>
+        </header>
+
+        <!-- Loading/error state -->
+        <div v-if="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading data...</p>
         </div>
-        <div class="ml-4">
-          <PdfExport v-if="selectedPart" :chart-ref="chartRef" />
+
+        <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {{ error }}
         </div>
-      </header>
 
-      <!-- Loading/error state -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p class="mt-2 text-gray-600">Loading data...</p>
-      </div>
+        <!-- If no data -->
+        <div v-else-if="!logs.length" class="text-center py-12 text-gray-500">
+          No logs found for this session.
+        </div>
 
-      <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        {{ error }}
-      </div>
-
-      <!-- If no data -->
-      <div v-else-if="!logs.length" class="text-center py-12 text-gray-500">
-        No logs found for this session.
-      </div>
-
-      <!-- Main content: parts list -->
-      <section v-else>
-        <h2 class="text-xl font-semibold mb-2">Parts in session</h2>
+        <!-- Main content: parts list -->
+        <section v-else>
+        <h2 class="text-xl font-semibold mb-4 mt-4">Parts in session</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             v-for="part in parts"
@@ -54,7 +59,7 @@
             @click="selectPart(part.id)"
           >
             <div class="font-medium">{{ part.name }}</div>
-            <div class="text-sm text-gray-500 mt-1">
+            <div class="text-sm text-gray-500">
               Sensor group: {{ part.groupName }}
             </div>
             <div class="text-sm text-gray-500">
@@ -64,8 +69,8 @@
         </div>
 
         <!-- If a part is selected -->
-        <div v-if="selectedPart" class="mt-12">
-          <div class="flex justify-between items-center mb-6">
+        <div v-if="selectedPart" class="mt-6 pt-4 border-t" >
+          <div class="flex justify-between items-center mb-2">
             <h3 class="text-xl font-semibold">
               Part: {{ selectedPart.name }}
             </h3>
@@ -122,15 +127,64 @@
           </div>
         </div>
       </section>
+      </div>
+
+      <!-- Sessions list view when no sessionId in route -->
+      <div v-else>
+        <header class="border-b pb-4">
+          <h3 class="text-2xl font-bold tracking-tight">Reports</h3>
+          <p class="text-sm text-gray-500">Completed sessions</p>
+        </header>
+
+        <div class="mt-6">
+          <div v-if="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Loading sessions...</p>
+          </div>
+
+          <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {{ error }}
+          </div>
+
+          <div v-else-if="!sessionsList.length" class="text-center py-12 text-gray-500">
+            No completed sessions found.
+          </div>
+
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              v-for="s in sessionsList"
+              :key="s.id"
+              class="bg-white border rounded-lg py-3 px-4 cursor-pointer hover:shadow transition-shadow"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium">Session #{{ s.id }} - {{ formatDate(s.createdAt) }}</div>
+                  <div class="text-sm text-gray-500">Batch: {{ s.batch || '—' }}</div>
+                  <div class="text-sm text-gray-500">Parts: {{ s.parts?.length || '—' }}</div>
+                </div>
+                <div>
+                  <button
+                    class="px-3 py-1 bg-indigo-600 text-white rounded text-sm"
+                    @click="openReport(s.id)"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { STATES } from "./../utils/constants.js";
 import PdfExport from './../components/PdfExport.vue';
 import { ref, onMounted, computed, nextTick, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { getSessionById, getLogs, fetchConfig } from './../api/index.js';
+import { useRoute, useRouter } from 'vue-router';
+import { getSessionById, getLogs, fetchConfig, getSessions } from './../api/index.js';
 import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -176,7 +230,9 @@ const FIXED_COLORS = [
 ];
 
 const route = useRoute();
+const router = useRouter();
 const session = ref(null);
+const sessionsList = ref([]);
 const config = ref(null);
 const logs = ref([]);
 const loading = ref(false);
@@ -229,7 +285,6 @@ function onLegendToggle(chart) {
   generateReport();
 }
 
-
 const temperatureLabels = [
   'T1 (gelation)',
   'T2 (polymerization)',
@@ -266,27 +321,45 @@ const selectedPart = computed(() =>
 
 onMounted(async () => {
   await loadData();
+  
   config.value = await fetchConfig();
+});
+
+watch(() => route.params.sessionId, async () => {
+  await loadData();
 });
 
 async function loadData() {
   loading.value = true;
   try {
-    // Load session
-    session.value = await getSessionById(route.params.sessionId);
-    // Load logs for the session period
-    const logsData = await getLogs({
-      sessionId: session.value.id,
-      from: session.value.startTime || undefined,
-      to: session.value.endTime || undefined,
-    });
-    logs.value = logsData;
+    const sessionId = route.params.sessionId;
+    console.log('Loading data for sessionId:', sessionId);
+    if (sessionId) {
+      // Detail view: load single session and logs
+      session.value = await getSessionById(sessionId);
+      const logsData = await getLogs({
+        sessionId: session.value.id,
+        from: session.value.startTime || undefined,
+        to: session.value.endTime || undefined,
+      });
+      logs.value = logsData;
+    } else {
+      // List view: load sessions and show only completed ones
+      const all = await getSessions(true, false);
+      // support both `status` and `state` fields, case-insensitive
+      sessionsList.value = all.filter(s => { return s.state.id === STATES.COMPLETED.id; });
+    }
   } catch (err) {
     error.value = err.message;
-    console.error('Error loading:', err);
+    console.error('Error loading:', err); 
   } finally {
     loading.value = false;
   }
+}
+
+// Helper to navigate to a session report
+function openReport(sessionId) {
+  router.push(`/reports/${sessionId}`);
 }
 
 async function selectPart(partId) {
