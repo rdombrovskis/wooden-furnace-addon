@@ -33,7 +33,7 @@ import autoTable from 'jspdf-autotable'
 
 import '../utils/fonts/Roboto-Regular-normal.js';
 
-const props = defineProps(['chartRef', 'sessionData', 'partName']);
+const props = defineProps(['chartRef', 'sessionData', 'partName', 'partOem']);
 const loading = ref(false);
 
 const generatePDF = async () => {
@@ -61,6 +61,10 @@ const generatePDF = async () => {
     pdf.setFontSize(14);
     pdf.setTextColor(50);
     pdf.text(`Part: ${props.partName || '—'}`, margin, yPos);
+    yPos += 8;
+    pdf.text(`OEM: ${props.partOem || '—'}`, margin, yPos);
+    yPos += 8;
+    pdf.text(`Batch: ${props.sessionData.batch || '—'}`, margin, yPos);
     yPos += 10;
     pdf.setFontSize(12);
     pdf.text(`Created: ${new Date(props.sessionData.createdAt).toLocaleString()}`, margin, yPos);
@@ -68,8 +72,6 @@ const generatePDF = async () => {
     pdf.text(`Start: ${new Date(props.sessionData.startTime).toLocaleString()}`, margin, yPos);
     yPos += 7;
     pdf.text(`End: ${new Date(props.sessionData.endTime).toLocaleString()}`, margin, yPos);
-    yPos += 7;
-    pdf.text(`Batch: ${props.sessionData.batch || '—'}`, margin, yPos);
     yPos += 10;
 
     pdf.setFontSize(12);

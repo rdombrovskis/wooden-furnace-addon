@@ -30,7 +30,8 @@
           <div class="ml-4">
             <PdfExport v-if="selectedPart" :chart-ref="chartRef" 
                                            :sessionData="session"
-                                           :partName="selectedPartId ? parts.find(p => p.id === selectedPartId)?.name  : ''" />
+                                           :partName="selectedPartId ? parts.find(p => p.id === selectedPartId)?.name  : ''"
+                                           :partOem="selectedPartId ? parts.find(p => p.id === selectedPartId)?.oem : ''" />
           </div>
         </header>
 
@@ -66,6 +67,9 @@
             </div>
             <div class="text-sm text-gray-500">
               Log entries: {{ part.logCount }}
+            </div>
+            <div class="text-sm text-gray-500">
+              OEM: {{ part.oem || '—' }}
             </div>
           </div>
         </div>
@@ -119,7 +123,7 @@
                     <td class="py-3">{{ event.reached === false ? '—' : formatDate(event.time) }}</td>
                     <td class="py-3">
                       <span v-if="event.reached === false" class="text-red-600">Not reached</span>
-                      <span v-else-if="event.duration != null">{{ `${event.duration} min` }}</span>
+                      <span v-else-if="event.duration != null">{{ `${formatDuration(event.duration)}` }}</span>
                       <span v-else>—</span>
                     </td>
                   </tr>
@@ -304,6 +308,7 @@ const parts = computed(() => {
       partsMap.set(partId, {
         id: partId,
         name: log.part.partNames?.name || 'Untitled',
+        oem: log.part.partNames?.oem || '',
         groupName: log.part.sensorGroup?.name || '—',
         logCount: 0,
         sensors: new Set(),
@@ -405,7 +410,7 @@ function prepareChart() {
 
   chartData.value = {
     datasets: Array.from(sensorsMap.values()).map((ds, idx) => ({
-      label: ds.label,
+      label: ds.label.split('.').slice(-1)[0],
       data: ds.data,
       borderColor: FIXED_COLORS[idx % FIXED_COLORS.length],
       backgroundColor: FIXED_COLORS[idx % FIXED_COLORS.length] + '20',
@@ -487,7 +492,7 @@ function generateReport() {
   // Filter logs by visible sensors
   const filteredLogs = logs.value.filter(l => 
     l.part?.id === selectedPartId.value && 
-    visibleSensorIds.has(l.sensor?.entityId)
+    visibleSensorIds.has(l.sensor?.entityId.split('.').slice(-1)[0])
   );
 
   if (filteredLogs.length === 0) return;
@@ -523,7 +528,7 @@ function generateReport() {
   }
   const startT1 = partLogs[0].time;
   const endT1 = t1Event.time;
-  const T1duration = Math.round((endT1 - startT1) / 60000); // minutes
+  const T1duration = endT1 - startT1;
   if (t1Event) eventsList.push({ label: eventLabels.reachedT1, time: t1Event.time, duration: T1duration, reached: true });
 
   // Reached T2
@@ -534,7 +539,7 @@ function generateReport() {
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
   }
-  const T2duration = Math.round((t2Event.time - endT1) / 60000); // minutes
+  const T2duration = t2Event.time - endT1;
   if (t2Event) eventsList.push({ label: eventLabels.reachedT2, time: t2Event.time, duration: T2duration, reached: true });
 
   // Reached T3 and hold
@@ -552,8 +557,8 @@ if (t3Logs.length) {
   const startT3 = t3Event.time;
   endT3 = t3Logs[t3Logs.length - 1].time; 
   
-  const durationToT3 = Math.round((t3Event.time - t2Event.time) / 60000); // minutes from T2 to T3
-  const holdDuration = Math.round((endT3 - startT3) / 60000); // hold duration within >= T3-1
+  const durationToT3 = t3Event.time - t2Event.time;
+  const holdDuration = endT3 - startT3;
 
   eventsList.push({ label: eventLabels.reachedT3, time: startT3, duration: durationToT3, reached: true });
   eventsList.push({ label: eventLabels.holdT3, time: endT3, duration: holdDuration, reached: true });
@@ -567,7 +572,7 @@ if (t3Logs.length) {
     updateChartAnnotations(eventsList.filter(e => e.reached));
     return;
   }
-  const durationToT4 = t4Event ? Math.round((t4Event.time - (endT3 || new Date())) / 60000) : null;
+  const durationToT4 = t4Event ? (t4Event.time - (endT3 || new Date())) : null;
   if (t4Event) eventsList.push({ label: eventLabels.cooledT4, time: t4Event.time, duration: durationToT4, reached: true });
   
   events.value = eventsList;
@@ -627,4 +632,19 @@ function formatDate(date) {
     minute: '2-digit',
   });
 }
+
+function formatDuration(ms) {
+  if (ms == null) return '—';
+  if (ms instanceof Date) ms = ms.getTime();
+
+  const totalSeconds = Math.floor(Number(ms) / 1000);
+  if (!isFinite(totalSeconds) || totalSeconds < 0) return '—';
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds].map(v => String(v).padStart(2, '0')).join(':');
+}
+
 </script>
