@@ -9,6 +9,7 @@ export default createRouter({
     { path: '/parts', component: PartsView},
     { path: '/sessions', component: SessionsView },
     { path: '/reports/:sessionId', component: ReportsView },
+    { path: '/reports', component: ReportsView },
     { path: '/', redirect: '/parts' }
   ]
 });

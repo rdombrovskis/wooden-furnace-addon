@@ -1,5 +1,4 @@
 <template>
-  <DefaultLayout>
     <!-- Navigation -->
     <nav class="flex space-x-2 bg-gray-900 px-6 py-3 border-b border-gray-700">
       <RouterLink
@@ -35,5 +34,4 @@
     <main class="bg-gray-950 text-gray-200 min-h-screen p-0 [@media(min-width:850px)]:p-6">
       <RouterView />
     </main>
-  </DefaultLayout>
 </template>

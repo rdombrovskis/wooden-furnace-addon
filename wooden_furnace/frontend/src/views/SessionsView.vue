@@ -168,6 +168,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getSessions, updateSession } from "./../api/index.js";
+import { STATES } from "./../utils/constants.js";
 
 const router = useRouter();
 
@@ -175,13 +176,6 @@ const sessions = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
-// State constants to avoid magic numbers and strings
-const STATES = {
-  CREATED: { id: 1, name: 'CREATED' },
-  IN_PROGRESS: { id: 2, name: 'IN PROGRESS' },
-  STOPPED: { id: 3, name: 'STOPPED' },
-  COMPLETED: { id: 4, name: 'COMPLETED' },
-};
 
 // Map styles using the names from STATES to avoid duplicated literals
 const STATUS_STYLES = {
