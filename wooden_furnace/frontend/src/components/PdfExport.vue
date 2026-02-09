@@ -10,9 +10,20 @@
     </svg>
     <span v-if="!loading">Get PDF</span>
     <span v-else>Generating...</span>
-    <div style="position:absolute;left:-9999px;top:-9999px;"><canvas id="myChart"></canvas></div>
   </button>
+  <div style="position:absolute;left:-9999px;top:-9999px;"><canvas id="myChart"></canvas></div>
+  <div id="dpi"></div>
 </template>
+
+<style>
+#dpi {
+    height: 1in;
+    left: -100%;
+    position: absolute;
+    top: -100%;
+    width: 1in;
+}
+</style>
 
 <script setup>
 import { ref, defineProps, toRaw  } from 'vue';
@@ -48,8 +59,12 @@ const generatePDF = async () => {
     pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - margin);
     yPos += 15;
 
+    const targetDpi = 300;
+    const deviceDpi = document.getElementById('dpi').offsetHeight;
+    const dpifactor = targetDpi / deviceDpi;
+
     const aspectRation = 16 / 9;
-    const pixPerMM = 4;
+    const pixPerMM = (deviceDpi / 25.4);
     const chartWidthMM = pageWidth - margin;
     const chartHeightMM = chartWidthMM / aspectRation;
 
@@ -63,8 +78,7 @@ const generatePDF = async () => {
 
     const rawData = JSON.parse(JSON.stringify(toRaw(chart.data)));
     const rawOptions = JSON.parse(JSON.stringify(toRaw(chart.options)));
-    rawOptions.devicesPixelRatio = 2;
-    rawOptions.animation = false;
+    rawOptions.devicePixelRatio = dpifactor;
 
     const plugin = {
         id: 'customCanvasBackgroundColor',
