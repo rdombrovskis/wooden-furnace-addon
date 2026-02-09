@@ -28,7 +28,9 @@
             </div>
           </div>
           <div class="ml-4">
-            <PdfExport v-if="selectedPart" :chart-ref="chartRef" />
+            <PdfExport v-if="selectedPart" :chart-ref="chartRef" 
+                                           :sessionData="session"
+                                           :partName="selectedPartId ? parts.find(p => p.id === selectedPartId)?.name  : ''" />
           </div>
         </header>
 
@@ -333,7 +335,6 @@ async function loadData() {
   loading.value = true;
   try {
     const sessionId = route.params.sessionId;
-    console.log('Loading data for sessionId:', sessionId);
     if (sessionId) {
       // Detail view: load single session and logs
       session.value = await getSessionById(sessionId);

@@ -31,7 +31,9 @@ import { jsPDF } from 'jspdf';
 import { Chart } from 'chart.js';
 import autoTable from 'jspdf-autotable'
 
-const props = defineProps(['chartRef']);
+import '../utils/fonts/Roboto-Regular-normal.js';
+
+const props = defineProps(['chartRef', 'sessionData', 'partName']);
 const loading = ref(false);
 
 const generatePDF = async () => {
@@ -50,14 +52,29 @@ const generatePDF = async () => {
     const margin = 15;
     let yPos = 20;
 
+    pdf.setFont("Roboto-Regular");
+
     pdf.setFontSize(18);
-    pdf.text('Session Report', margin, yPos);
+    pdf.text(`Session Report #${props.sessionData.id}`, margin, yPos);
     yPos += 10;
 
-    pdf.setFontSize(10);
+    pdf.setFontSize(14);
+    pdf.setTextColor(50);
+    pdf.text(`Part: ${props.partName || '—'}`, margin, yPos);
+    yPos += 10;
+    pdf.setFontSize(12);
+    pdf.text(`Created: ${new Date(props.sessionData.createdAt).toLocaleString()}`, margin, yPos);
+    yPos += 7;
+    pdf.text(`Start: ${new Date(props.sessionData.startTime).toLocaleString()}`, margin, yPos);
+    yPos += 7;
+    pdf.text(`End: ${new Date(props.sessionData.endTime).toLocaleString()}`, margin, yPos);
+    yPos += 7;
+    pdf.text(`Batch: ${props.sessionData.batch || '—'}`, margin, yPos);
+    yPos += 10;
+
+    pdf.setFostSize(12);
     pdf.setTextColor(100);
     pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - margin);
-    yPos += 15;
 
     const targetDpi = 300;
     const deviceDpi = document.getElementById('dpi').offsetHeight;
@@ -112,8 +129,8 @@ const generatePDF = async () => {
 
     yPos += chartHeightMM + 10;
 
-    pdf.setFontSize(9);
-    pdf.setTextColor(120);
+    pdf.setFontSize(14);
+    pdf.setTextColor(50);
     pdf.text('Temperature profile', margin, yPos);
     yPos += 10;
 
