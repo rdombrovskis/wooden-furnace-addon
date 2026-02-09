@@ -41,7 +41,11 @@
                     class="bg-white border border-gray-300 text-gray-900 rounded px-2 py-1"
                   >
                     <option value="">-- select group --</option>
-                    <option v-for="group in visibleThermometerGroups" :key="group.id" :value="group.id">
+                    <option
+                      v-for="group in availableGroupsFor(part)"
+                      :key="group.id"
+                      :value="group.id"
+                    >
                       {{ group.id + ': ' + group.name }}
                     </option>
                   </select>
@@ -106,7 +110,7 @@
               ]"
               confirmText="Confirm"
               @close="showBatchModal = false" 
-              @confirm="startSession" />`
+              @confirm="startSession" />
 </template>
 
 <script setup>
@@ -205,4 +209,13 @@ const startSession = async (data) => {
   // Navigate to sessions list
   router.push('/sessions');
 };
+
+// Return thermometer groups excluding those already selected by other parts
+const availableGroupsFor = (part) => {
+  const used = new Set(parts.map(p => p.selectedGroup).filter(s => s !== '' && s !== undefined));
+  if (part.selectedGroup) 
+    used.delete(part.selectedGroup);
+
+  return visibleThermometerGroups.value.filter(g => !used.has(g.id));
+}
 </script>
