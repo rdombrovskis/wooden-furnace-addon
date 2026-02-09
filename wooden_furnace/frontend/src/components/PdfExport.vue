@@ -72,7 +72,7 @@ const generatePDF = async () => {
     pdf.text(`Batch: ${props.sessionData.batch || '—'}`, margin, yPos);
     yPos += 10;
 
-    pdf.setFostSize(12);
+    pdf.setFontSize(12);
     pdf.setTextColor(100);
     pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - margin);
 
