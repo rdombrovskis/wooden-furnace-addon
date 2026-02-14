@@ -248,6 +248,33 @@ const selectedPartId = ref(null);
 const temperatures = ref([55, 60, 70, 40]); // T1–T4 defaults
 const chartData = ref(null);
 const events = ref([]);
+let _saveTempsTimer = null;
+
+function loadTemperaturesForPart(partId) {
+  if (!partId) return;
+  try {
+    const key = `tempProfile:part:${partId}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length >= 4) {
+      temperatures.value = parsed.map(v => Number(v));
+    }
+  } catch (err) {
+    console.warn('Failed to load temperatures for part', partId, err);
+  }
+}
+
+function saveTemperaturesForPart(partId, temps) {
+  if (!partId) return;
+  try {
+    const key = `tempProfile:part:${partId}`;
+    localStorage.setItem(key, JSON.stringify(temps));
+  } catch (err) {
+    console.warn('Failed to save temperatures for part', partId, err);
+  }
+}
+
 const chartOptions = {
   responsive: true,
   animation: false,
@@ -374,6 +401,8 @@ async function selectPart(partId) {
   // reset previous chart/events and prepare new chart
   chartData.value = null;
   events.value = [];
+  // load saved temperatures for this part (if any)
+  loadTemperaturesForPart(partId);
   prepareChart();
 }
 
@@ -648,5 +677,14 @@ function formatDuration(ms) {
 
   return [hours, minutes, seconds].map(v => String(v).padStart(2, '0')).join(':');
 }
+
+// Auto-save temperatures when they change
+watch(temperatures, (newVal) => {
+  if (!selectedPartId.value) return;
+  if (_saveTempsTimer) clearTimeout(_saveTempsTimer);
+  _saveTempsTimer = setTimeout(() => {
+    saveTemperaturesForPart(selectedPartId.value, newVal);
+  }, 1000);
+}, { deep: true });
 
 </script>
