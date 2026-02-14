@@ -33,7 +33,7 @@ import autoTable from 'jspdf-autotable'
 
 import '../utils/fonts/Roboto-Regular-normal.js';
 
-const props = defineProps(['chartRef', 'sessionData', 'partName', 'partOem']);
+const props = defineProps(['chartRef', 'sessionData', 'partName', 'partOem', 'temperatures']);
 const loading = ref(false);
 
 const generatePDF = async () => {
@@ -134,7 +134,30 @@ const generatePDF = async () => {
     pdf.setFontSize(14);
     pdf.setTextColor(50);
     pdf.text('Temperature profile', margin, yPos);
-    yPos += 10;
+    yPos += 5;
+
+    // If temperatures were provided, render them as a small table
+    const temps = props.temperatures || [];
+    if (Array.isArray(temps) && temps.length) {
+      const body = [
+        ['T1 (Gelation)', temps[0] != null ? String(temps[0]) : '—'],
+        ['T2 (Initial cure)', temps[1] != null ? String(temps[1]) : '—'],
+        ['T3 (Post-cure)', temps[2] != null ? String(temps[2]) : '—'],
+        ['T4 (Cool down)', temps[3] != null ? String(temps[3]) : '—'],
+      ];
+
+      autoTable(pdf, {
+        head: [['Target', 'Temperature (°C)']],
+        body,
+        startY: 15,
+        tableWidth: 80,
+        margin: { left: pageWidth / 2 + margin, right: margin },
+        styles: { fontSize: 10, cellPadding: 2, lineWidth: 0.1 },
+        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontStyle: 'bold' }
+      });
+
+      //yPos = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 10 : yPos + 20;
+    }
 
     const tables = document.querySelectorAll('table');
 

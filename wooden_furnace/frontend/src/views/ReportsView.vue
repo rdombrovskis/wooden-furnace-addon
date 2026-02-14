@@ -28,10 +28,11 @@
             </div>
           </div>
           <div class="ml-4">
-            <PdfExport v-if="selectedPart" :chart-ref="chartRef" 
-                                           :sessionData="session"
-                                           :partName="selectedPartId ? parts.find(p => p.id === selectedPartId)?.name  : ''"
-                                           :partOem="selectedPartId ? parts.find(p => p.id === selectedPartId)?.oem : ''" />
+            <PdfExport v-if="selectedPart" :chart-ref="chartRef"
+                       :sessionData="session"
+                       :partName="selectedPartId ? parts.find(p => p.id === selectedPartId)?.name  : ''"
+                       :partOem="selectedPartId ? parts.find(p => p.id === selectedPartId)?.oem : ''"
+                       :temperatures="temperatures" />
           </div>
         </header>
 
@@ -412,6 +413,7 @@ function prepareChart() {
     datasets: Array.from(sensorsMap.values()).map((ds, idx) => ({
       label: ds.label.split('.').slice(-1)[0],
       data: ds.data,
+      pointStyle: false,
       borderColor: FIXED_COLORS[idx % FIXED_COLORS.length],
       backgroundColor: FIXED_COLORS[idx % FIXED_COLORS.length] + '20',
       tension: 0.1,
