@@ -6,7 +6,7 @@
     [
       "@semantic-release/changelog",
       {
-        "changelogFile": "CHANGELOG.md"
+        "changelogFile": "wooden_furnace/CHANGELOG.md"
       }
     ],
     [
@@ -24,7 +24,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "wooden_furnace/config.yaml"]
+        "assets": ["wooden_furnace/CHANGELOG.md", "wooden_furnace/config.yaml"]
       }
     ],
     "@semantic-release/github"
