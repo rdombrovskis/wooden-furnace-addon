@@ -1,0 +1,32 @@
+{
+  "branches": ["master"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "semantic-release-replace-plugin",
+      {
+        "replacements": [
+          {
+            "files": ["wooden_furnace/config.yaml"],
+            "from": "version: \".*\"",
+            "to": "version: \"${nextRelease.version}\""
+          }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md", "wooden_furnace/config.yaml"]
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
