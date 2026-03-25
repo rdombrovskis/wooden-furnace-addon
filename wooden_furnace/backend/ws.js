@@ -5,10 +5,12 @@ const prisma = require('./client');
 const state = require('./state');
 const fs = require('fs');
 
+
+const ts = () => `[${new Date().toISOString()}]`;
 const log = {
-  info: (...args) => log.info(`[${new Date().toISOString()}]`, ...args),
-  warn: (...args) => log.warn(`[${new Date().toISOString()}]`, ...args),
-  error: (...args) => log.error(`[${new Date().toISOString()}]`, ...args),
+  info: (...args) => console.log(ts(), ...args),
+  warn: (...args) => console.warn(ts(), ...args),
+  error: (...args) => console.error(ts(), ...args),
 };
 
 log.info('[WS] Connecting to:', WS_URL);
