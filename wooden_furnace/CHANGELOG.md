@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/rdombrovskis/wooden-furnace-addon/compare/v1.2.1...v1.2.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* fixed recursive call to log ([686dba0](https://github.com/rdombrovskis/wooden-furnace-addon/commit/686dba08f59d8e2a86c61fb7b5312a7b85d382e3))
+
 ## [1.2.1](https://github.com/rdombrovskis/wooden-furnace-addon/compare/v1.2.0...v1.2.1) (2026-03-25)
 
 
