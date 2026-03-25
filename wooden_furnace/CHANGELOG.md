@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/rdombrovskis/wooden-furnace-addon/compare/v1.2.0...v1.2.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* auto-reconnect on websocket being disconnected ([3c995c6](https://github.com/rdombrovskis/wooden-furnace-addon/commit/3c995c66b6762868c5e61eeb15e026cf60d8ad21))
+
 # [1.2.0](https://github.com/rdombrovskis/wooden-furnace-addon/compare/v1.1.5...v1.2.0) (2026-02-14)
 
 
